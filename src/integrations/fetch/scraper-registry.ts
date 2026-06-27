@@ -4,6 +4,7 @@ import {
   ProviderRegistry,
 } from "@src/registry/provider-registry.ts";
 import { ArxivSearchScraper } from "@src/integrations/fetch/providers/arxiv-search-scraper.ts";
+import { AboutAmazonScraper } from "@src/integrations/fetch/providers/aboutamazon-scraper.ts";
 import { BraveSearchScraper } from "@src/integrations/fetch/providers/brave-search-scraper.ts";
 import { ExaSearchScraper } from "@src/integrations/fetch/providers/exa-search-scraper.ts";
 import { ContentScraper } from "@src/core/ports/content-scraper.ts";
@@ -117,6 +118,13 @@ scraperRegistry.register({
   kind: "fetch",
   isConfigured: () => true,
   create: () => new ArxivSearchScraper(),
+});
+
+scraperRegistry.register({
+  id: ScraperType.ABOUTAMAZON,
+  kind: "fetch",
+  isConfigured: () => true,
+  create: () => new AboutAmazonScraper(),
 });
 
 scraperRegistry.register({

@@ -155,6 +155,16 @@ fetchProviderRegistry.register({
 });
 
 fetchProviderRegistry.register({
+  id: "aboutamazon",
+  kind: "fetch",
+  scraperType: ScraperType.ABOUTAMAZON,
+  isConfigured: () => true,
+  matches: (url) =>
+    url.hostname === "aboutamazon.com" ||
+    url.hostname.endsWith(".aboutamazon.com"),
+});
+
+fetchProviderRegistry.register({
   id: "firecrawl",
   kind: "fetch",
   scraperType: ScraperType.FIRECRAWL,

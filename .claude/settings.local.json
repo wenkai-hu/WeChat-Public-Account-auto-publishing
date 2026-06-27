@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "PowerShell(deno --version)",
-      "PowerShell(cd \"D:\\\\code\\\\俊哥\\\\ai-trend-publish-main\"; $env:NPM_CONFIG_REGISTRY=\"https://registry.npmjs.org/\"; deno task doctor)"
+      "PowerShell(cd \"D:\\\\code\\\\俊哥\\\\ai-trend-publish-main\"; $env:NPM_CONFIG_REGISTRY=\"https://registry.npmjs.org/\"; deno task doctor)",
+      "mcp__ide__getDiagnostics",
+      "PowerShell(deno run --allow-net --allow-env --allow-read scripts/test-aboutamazon.ts)",
+      "PowerShell($env:DENO_NPM_REGISTRY = \"https://registry.npmjs.org/\"; deno run --allow-net --allow-env --allow-read scripts/test-aboutamazon.ts)",
+      "PowerShell(deno check src/integrations/fetch/providers/aboutamazon-scraper.ts)",
+      "PowerShell($env:NPM_CONFIG_REGISTRY; $env:DENO_NPM_REGISTRY; deno config registry 2>&1)",
+      "PowerShell($env:NPM_CONFIG_REGISTRY; deno info npm:zod 2>&1)",
+      "PowerShell(Test-Path *)",
+      "PowerShell($env:NPM_CONFIG_REGISTRY = \"https://registry.npmmirror.com\"; $env:DENO_NPM_REGISTRY = \"https://registry.npmmirror.com\"; deno info npm:zod 2>&1)",
+      "PowerShell($env:NPM_CONFIG_REGISTRY = \"https://registry.npmmirror.com\"; $env:DENO_NPM_REGISTRY = \"https://registry.npmmirror.com\"; deno task doctor 2>&1 | Select-Object -First 30)",
+      "PowerShell(cd \"d:\\\\code\\\\俊哥\\\\ai-trend-publish-main\"; $result = deno check src/integrations/fetch/providers/aboutamazon-scraper.ts 2>&1; $exitCode = $LASTEXITCODE; Write-Host \"Exit code: $exitCode\"; if \\($exitCode -ne 0\\) { $result } else { Write-Host \"PASSED\" })"
     ]
   }
 }

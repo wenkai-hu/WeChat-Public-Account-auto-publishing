@@ -3,7 +3,7 @@ export type ProviderKind =
   | "llm"
   | "image"
   | "publish"
-  | "notify"ProviderAdapter
+  | "notify"
   | "vector";
 
 export interface ProviderAdapter<TConfig, TProviderId extends string = string> {

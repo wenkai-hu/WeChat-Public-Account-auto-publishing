@@ -25,6 +25,7 @@ export type FetchProviderName =
   | "gdelt"
   | "hackernews"
   | "arxiv"
+  | "aboutamazon"
   | "twitter"
   | "rss";
 

@@ -19,6 +19,7 @@ export type ArticleSourceFilter =
   | "gdelt"
   | "hackernews"
   | "arxiv"
+  | "aboutamazon"
   | "twitter"
   | "rss";
 
