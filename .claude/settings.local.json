@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(deno --version)",
+      "PowerShell(cd \"D:\\\\code\\\\俊哥\\\\ai-trend-publish-main\"; $env:NPM_CONFIG_REGISTRY=\"https://registry.npmjs.org/\"; deno task doctor)"
+    ]
+  }
+}
