@@ -6,6 +6,7 @@
     "verify": "deno run -A scripts/task-runner.ts verify",
     "test": "deno run -A scripts/task-runner.ts test",
     "article": "deno run -A scripts/task-runner.ts article",
+    "lite": "deno run -A scripts/task-runner.ts lite",
     "experiment": "deno run -A scripts/task-runner.ts experiment",
     "preview": "deno run -A scripts/task-runner.ts preview",
     "relay": "deno run -A scripts/task-runner.ts relay",

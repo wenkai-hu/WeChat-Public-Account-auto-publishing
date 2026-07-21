@@ -4,7 +4,8 @@ export type PromptProfileName =
   | "business"
   | "product"
   | "developer"
-  | "research";
+  | "research"
+  | "crossborder";
 
 export interface PromptProfile {
   id: PromptProfileName;
@@ -196,6 +197,45 @@ const PROMPT_PROFILES: Record<PromptProfileName, PromptProfile> = {
     imageGuidance:
       "开发工具、代码窗口、终端、架构图感、云基础设施和工程工作台。",
     coverGuidance: "开发者工具、工程实践、开源项目、API 和基础设施。",
+  },
+  crossborder: {
+    id: "crossborder",
+    label: "跨境资讯简报",
+    audience:
+      "关注跨境电商、外贸政策、国际物流、平台规则和合规变动的中小卖家、外贸企业和跨境从业者",
+    editorialTone:
+      "简洁、直白、信息密集，像跨境资讯简报：每则资讯用两三句话说清谁、什么时间、什么事、影响什么，不写空泛观点和广告腔",
+    selectionFocus: [
+      "跨境电商平台规则更新（亚马逊、eBay、TikTok、Shopee、速卖通、SHEIN、美客多等）",
+      "外贸合规与税务政策变动（关税、EPR、增值税、反倾销、海关清关要求）",
+      "国际物流、仓储和配送政策变化",
+      "市场数据、行业趋势和产业信号",
+      "能直接指导卖家调整经营策略或合规操作的实用信息",
+    ],
+    contentAngles: [
+      "事实核心：发生了什么，涉及哪个平台/机构，什么时候生效",
+      "读者影响：这件事对跨境卖家意味着什么，需要做什么准备或调整",
+      "背景补充：只补充读者看懂政策变化或平台规则的必要背景，不展开过度分析",
+    ],
+    preferredTopics: [
+      "亚马逊、eBay、TikTok Shop、Shopee、速卖通、SHEIN、美客多等平台规则更新",
+      "海关、关税、反倾销、EPR、VAT 等外贸合规政策",
+      "国际物流、仓储配送和旺季附加费调整",
+      "外贸行业数据、市场信号和产业趋势",
+      "供应商招募、平台入驻政策和卖家扶持计划",
+    ],
+    lowValueSignals: [
+      "泛泛的宏观经济评论",
+      "缺少具体日期、平台和政策细节的笼统资讯",
+      "软文式公司宣传和无数据支撑的市场判断",
+    ],
+    titleGuidance:
+      "标题标明时间范围 + 内容领域，例如「2026年7月第三周跨境电商资讯汇总」，开头用一句带时间范围的问句引入，例如「上周跨境圈又发生了哪些重要变化？」",
+    layoutGuidance:
+      "像跨境资讯简报：按类别分段（如「税务合规」「平台动态」「市场信息」），每则资讯用编号 + 粗体标题开头，正文用简短段落讲清楚事件主体、时间、细节和影响，结尾留一个公司简介或说明板块。",
+    imageGuidance:
+      "简洁商业资讯风，可使用世界地图、物流线路、数据图表、港口或办公场景抽象图形。",
+    coverGuidance: "跨境资讯、外贸合规、跨境电商平台动态、每周资讯简报。",
   },
   research: {
     id: "research",

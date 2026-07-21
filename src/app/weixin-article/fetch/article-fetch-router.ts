@@ -38,7 +38,8 @@ export class ArticleFetchRouter implements ArticleContentFetcher {
     this.config = configOrScrapers;
     this.scrapers = scrapers;
   }
-
+//41-160 爬虫逻辑
+//根据url和已有的爬虫列表爬取数据 输出爬到的content或者报错 
   async scrape(
     source: ArticleSource,
     onAttemptFailure?: (

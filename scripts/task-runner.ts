@@ -101,6 +101,13 @@ await new Command()
   )
   .command("experiment", experimentCommand())
   .command(
+    "lite",
+    passthrough(
+      "精简版工作流：抓取 → AI 筛选 → 生成简报。",
+      (args) => run(DENO, ["run", "-A", "scripts/run-lite.ts", ...args]),
+    ),
+  )
+  .command(
     "preview",
     passthrough(
       "生成微信模板预览。",
@@ -559,6 +566,7 @@ function printHelp() {
   deno task article --dry-run   跑微信文章 dry-run
   deno task experiment article-quality  运行临时文章质量实验
   deno task article             真实创建微信公众号草稿
+  deno task lite                精简版：抓取→AI筛选→生成简报
   deno task preview             生成模板预览
   deno task relay               启动微信发布 relay
   deno task docker              启动 Docker 服务

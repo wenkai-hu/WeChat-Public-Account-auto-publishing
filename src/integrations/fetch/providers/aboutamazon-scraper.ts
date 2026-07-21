@@ -16,12 +16,24 @@ import { JSDOM } from "npm:jsdom@26.1.0";
 const logger = new Logger("aboutamazon-scraper");
 
 const ABOUTAMAZON_API_URL =
-  "https://www.aboutamazon.com/gca_api/search-articles?category=Retail&category=Operations&category=Transportation&category=Company+news&category=Innovation+at+Amazon&category=Policy+news+%26+views&includeHiddenFromSearch=true";
+  "https://www.aboutamazon.com/gca_api/search-articles?count=50";
+
+// 对跨境卖家可能有用的分类
+const RELEVANT_CATEGORIES = new Set([
+  "Retail",
+  "Company news",
+  "Books and authors",
+  "AWS",
+]);
 
 const ArticleListItemSchema = z.object({
   canonicalLink: z.string().optional(),
-  publishDateTimestamp: z.number().optional(),
-  title: z.string().optional(),
+  category: z.string().optional(),
+  updateTimestamp: z.number().optional(),
+  seoAttributes: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+  }).optional(),
 });
 
 const ArticleListResponseSchema = z.object({
@@ -39,15 +51,20 @@ export class AboutAmazonScraper implements ContentScraper {
     _sourceId: string,
     options?: ScraperOptions,
   ): Promise<ScrapedContent[]> {
-    const limit = normalizeLimit(options?.limit, 20, 50);
+    const limit = normalizeLimit(options?.limit, 15, 50);
     const articles = await this.fetchArticleList();
 
     const sorted = articles
       .filter((item) => isHttpUrl(item.canonicalLink ?? ""))
+      .filter((item) => RELEVANT_CATEGORIES.has(item.category ?? ""))
       .sort((a, b) =>
-        (b.publishDateTimestamp ?? 0) - (a.publishDateTimestamp ?? 0)
+        (b.updateTimestamp ?? 0) - (a.updateTimestamp ?? 0)
       )
       .slice(0, limit);
+
+    logger.info(
+      `[aboutamazon] API 返回 ${articles.length} 条，筛选后 ${sorted.length} 条`,
+    );
 
     const results: ScrapedContent[] = [];
     for (const article of sorted) {
@@ -55,7 +72,7 @@ export class AboutAmazonScraper implements ContentScraper {
       try {
         const detail = await this.scrapeArticle(url, article);
         results.push(detail);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 800));
       } catch (error) {
         logger.warn(
           `[aboutamazon] 抓取失败 ${url}: ${
@@ -107,18 +124,45 @@ export class AboutAmazonScraper implements ContentScraper {
     const doc = dom.window.document;
 
     const title = doc.querySelector("h1")?.textContent?.trim() ??
-      listItem.title?.trim() ??
+      listItem.seoAttributes?.title?.trim() ??
       url;
 
     const publishDate = extractPublishDate(doc) ??
-      normalizeTimestamp(listItem.publishDateTimestamp) ??
+      normalizeUpdateTimestamp(listItem.updateTimestamp) ??
       new Date().toISOString();
 
-    const content = doc
-      .querySelector(".ArticlePage-mainContent article")
-      ?.textContent
-      ?.replace(/\s+/g, " ")
-      .trim() ?? "";
+    // 从 JSON-LD 取封面图
+    const coverImage = extractCoverImage(doc);
+
+    // 保留段落结构的正文提取
+    const article = doc.querySelector(".ArticlePage-mainContent article");
+    const paragraphs: string[] = [];
+    if (article) {
+      for (const block of article.querySelectorAll(".contentContainer.block")) {
+        const roleEl = block.querySelector("[class^='contentItem-role']");
+        const role = roleEl?.className ?? "";
+        if (role.includes("heading2")) {
+          const text = block.textContent?.trim();
+          if (text) paragraphs.push(`\n## ${text}`);
+        } else if (role.includes("text")) {
+          const texts: string[] = [];
+          for (const el of block.querySelectorAll(".text.v2")) {
+            const t = el.textContent?.trim();
+            if (t) texts.push(t);
+          }
+          if (texts.length) paragraphs.push(texts.join(" "));
+        } else if (role.includes("unorderedList")) {
+          for (const li of block.querySelectorAll("li")) {
+            const text = li.textContent?.trim();
+            if (text) paragraphs.push(`- ${text}`);
+          }
+        }
+      }
+    }
+
+    const content = paragraphs.length > 0
+      ? paragraphs.join("\n\n")
+      : (article?.textContent?.replace(/\s+/g, " ").trim() ?? title);
 
     return {
       id: `aboutamazon_${stableHash(url)}`,
@@ -126,7 +170,7 @@ export class AboutAmazonScraper implements ContentScraper {
       content: content || title,
       url,
       publishDate,
-      media: [],
+      media: coverImage ? [coverImage] : [],
       metadata: {
         source: "aboutamazon",
         provider: "aboutamazon",
@@ -135,18 +179,31 @@ export class AboutAmazonScraper implements ContentScraper {
   }
 }
 
-function extractPublishDate(document: { querySelectorAll(selectors: string): NodeListOf<Element> }): string | undefined {
-  for (const script of Array.from(
-    document.querySelectorAll('script[type="application/ld+json"]'),
-  )) {
+function extractCoverImage(doc: Document): { url: string; type: string; size: { width: number; height: number } } | undefined {
+  for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
     try {
       const jsonLd = JSON.parse(script.textContent ?? "");
-      if (jsonLd?.datePublished) {
-        return jsonLd.datePublished;
+      const images = jsonLd?.image;
+      if (Array.isArray(images) && images.length > 0) {
+        const img = images[0];
+        return {
+          url: img.url ?? "",
+          type: "image",
+          size: { width: img.width ?? 0, height: img.height ?? 0 },
+        };
       }
-      if (jsonLd?.publisher?.datePublished) {
-        return jsonLd.publisher.datePublished;
-      }
+    } catch {
+      // 忽略
+    }
+  }
+  return undefined;
+}
+
+function extractPublishDate(doc: Document): string | undefined {
+  for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
+    try {
+      const jsonLd = JSON.parse(script.textContent ?? "");
+      if (jsonLd?.datePublished) return jsonLd.datePublished;
     } catch {
       // 忽略解析失败的 ld+json 块
     }
@@ -154,11 +211,12 @@ function extractPublishDate(document: { querySelectorAll(selectors: string): Nod
   return undefined;
 }
 
-function normalizeTimestamp(
+function normalizeUpdateTimestamp(
   value: number | undefined,
 ): string | undefined {
+  // API 返回的 updateTimestamp 是毫秒级时间戳
   if (!value || !Number.isFinite(value)) return undefined;
-  const date = new Date(value * 1000);
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) return undefined;
   return date.toISOString();
 }
