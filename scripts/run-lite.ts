@@ -266,7 +266,10 @@ ${profile.titleGuidance}
       content: item.content.replace(/\n{2,}/g, "<next_paragraph />").replace(/\n/g, "<next_paragraph />"),
       url: sourceUrl,
       publishDate: new Date().toISOString().replace(/T.*/, ""),
-      metadata: { category: item.category },
+      metadata: {
+        category: item.category,
+        maxAgeDays: config.features.article.sourceLimits?.maxAgeDays ?? 5,
+      },
       keywords: [] as string[],
       media: sourceMedia,
     };

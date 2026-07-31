@@ -14,6 +14,21 @@ function renderContentBlock(html) {
     .replace(/<li>/gi, '<p style="margin:8px 0;color:#ffffff;font-size:14px;line-height:2;letter-spacing:0.5px;">▪&nbsp;')
     .replace(/<\/li>/gi, '</p>');
 }
+
+// 爬取时间区间：右端=今天，左端=今天 - 数据源保留天数（config sourceLimits.maxAgeDays）
+var periodEnd = new Date();
+var maxAgeDays = (articles && articles[0] && articles[0].metadata && articles[0].metadata.maxAgeDays) || 5;
+var periodStart = new Date(periodEnd.getTime() - maxAgeDays * 86400000);
+function fmtDot(d) { return d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate(); }
+function fmtDotRange(a, b) {
+  var bStr = (b.getFullYear() === a.getFullYear() ? '' : b.getFullYear() + '.') + (b.getMonth() + 1) + '.' + b.getDate();
+  return fmtDot(a) + '-' + bStr;
+}
+function fmtCnRange(a, b) {
+  var aM = a.getMonth() + 1, aD = a.getDate(), bM = b.getMonth() + 1, bD = b.getDate();
+  return aM + '月' + aD + '日-' + (bM === aM ? '' : bM + '月') + bD + '日';
+}
+var cnWeek = ['一', '二', '三', '四', '五', '六'][Math.floor((periodStart.getDate() - 1) / 7)];
 %>
 <section style="font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background-color:#002E39;box-sizing:border-box;font-style:normal;font-weight:400;text-align:justify;color:#3E3E3E;margin:0;padding:0;">
 
@@ -28,10 +43,15 @@ function renderContentBlock(html) {
     </section>
 
     <section style="margin:22px 0 6px auto;width:90%;padding:6px 14px;text-align:right;border-left:1px dashed #ffffff;border-right:1px solid #ffffff;letter-spacing:2px;line-height:2;">
-      <p style="margin:0;color:#ffffff;font-weight:bold;font-size:16px;letter-spacing:0.5px;"><%= new Date().toISOString().replace(/T.*/, "") %></p>
+      <p style="margin:0;color:#ffffff;font-weight:bold;font-size:16px;letter-spacing:0.5px;"><%= fmtDotRange(periodStart, periodEnd) %></p>
       <p style="margin:0;color:#ffffff;font-weight:bold;font-size:15px;letter-spacing:0.5px;">跨境电商 · 卖家资讯汇编</p>
     </section>
     <p style="margin:0;color:#ffffff;font-size:15px;letter-spacing:0.5px;text-align:right;line-height:1.2;"><b style="font-weight:bold;letter-spacing:0.5px;">-----------------------------------------</b></p>
+  </section>
+
+  <section style="background-color:#002E39;margin:0;padding:2px 14px 0;">
+    <p style="margin:0 0 12px;color:#ffffff;font-size:15px;letter-spacing:0.5px;line-height:1.9;"><span style="background-color:#FF7918;color:#ffffff;font-weight:bold;padding:0 2px;"><%= periodStart.getFullYear() %>年<%= periodStart.getMonth() + 1 %>月第<%= cnWeek %>周（<%= fmtCnRange(periodStart, periodEnd) %>）</span>，跨境电商领域又产生了哪些重要信息？</p>
+    <p style="margin:0 0 16px;color:#ffffff;font-size:15px;letter-spacing:0.5px;line-height:1.9;">以下是我们<span style="background-color:#FF7918;color:#ffffff;font-weight:bold;padding:0 2px;">迈途国际</span>为各位卖家朋友带来的一周资讯汇总：</p>
   </section>
 
   <section style="background-color:#002E39;margin:0;padding:0 14px 14px;">
@@ -58,8 +78,7 @@ function renderContentBlock(html) {
         </section>
       </section>
       <section style="margin:0;padding:20px 14px 24px;border:2px solid #ffffff;background-color:#002E39;">
-        <p style="margin:0 0 6px;color:#ffffff;font-size:19px;font-weight:bold;letter-spacing:1px;line-height:1.5;"><%= article.title %></p>
-        <p style="margin:0 0 18px;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:1px;"><%= article.publishDate %></p>
+        <p style="margin:0 0 18px;color:#ffffff;font-size:19px;font-weight:bold;letter-spacing:1px;line-height:1.5;"><%= article.title %></p>
         <% var content=article.content || ""; var paragraphs=content.split("<next_paragraph />");
         for(var i=0; i<paragraphs.length; i++) { var para=paragraphs[i].trim(); if(para.length>0) { %>
           <section style="margin:0 0 16px;color:#ffffff;font-size:14px;letter-spacing:0.5px;line-height:2;text-align:justify;">

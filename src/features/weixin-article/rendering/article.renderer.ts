@@ -89,14 +89,16 @@ export class WeixinArticleTemplateRenderer
       ...WEIXIN_TEMPLATE_REGISTRY,
       dynamic: DYNAMIC_TEMPLATE,
     };
-    // shazhixing 以可读 .ejs 文件为准，便于直接手改模板
+    // shazhixing 以可读 .ejs 文件为准，便于直接手改模板。
+    // 必须同步读取：构造器不 await initializeTemplates，异步读会产生竞态，
+    // render() 会先用到 registry 里的旧模板。
     try {
       const shazhixingPath = join(
         Deno.cwd(),
         "src/features/weixin-article/rendering/templates",
         "article.shazhixing.ejs",
       );
-      this.templates.shazhixing = await Deno.readTextFile(shazhixingPath);
+      this.templates.shazhixing = Deno.readTextFileSync(shazhixingPath);
     } catch (error) {
       logger.warn(
         `article.shazhixing.ejs 读取失败，回退 registry: ${
