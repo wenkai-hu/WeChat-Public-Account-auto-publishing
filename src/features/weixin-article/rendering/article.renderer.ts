@@ -43,6 +43,8 @@ export class WeixinArticleTemplateRenderer
       "product",
       "minimal",
       "darktech",
+      "crossborder",
+      "shazhixing",
       "dynamic",
     ];
   }

@@ -21,6 +21,7 @@ import type { INotifier } from "@src/core/ports/notifier.ts";
 import type { ScrapedContent } from "@src/core/ports/content-scraper.ts";
 import type { ArticleSourceFilter } from "@src/features/weixin-article/services/content-scrape.service.ts";
 import { join } from "node:path";
+import { WeixinPublisher } from "@src/integrations/publish/providers/weixin-publisher.ts";
 
 interface CliOptions {
   dryRun: boolean;
@@ -136,7 +137,7 @@ try {
   console.log("[2/4] 去重排序...");
   const unique = dedupByUrl(scraped.contents);
   const sorted = sortByFreshness(unique);
-  const candidates = sorted.slice(0, options.maxArticles ?? 30);
+  const candidates = sorted.slice(0, options.maxArticles ?? 35);
   console.log(`  → 去重后 ${unique.length} 条, 候选 ${candidates.length} 条`);
 
   // ── 3. AI 筛选 + 写简报 ──
@@ -205,9 +206,16 @@ ${profile.titleGuidance}
   let result: { title?: string; categories?: Array<{ name: string; items: Array<{ title: string; summary: string; sourceIndex?: number }> }>; empty?: boolean; reason?: string };
 
   try {
-    result = JSON.parse(raw.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim());
-  } catch {
-    console.error("  ⚠ AI 返回非 JSON，尝试直接保存为纯文本");
+    // 从 AI 响应中提取 JSON：去掉 BOM、去掉 markdown 代码块、截取第一个 { 到最后一个 }
+    const cleaned = raw.replace(/^﻿/, "").trim();
+    const jsonStart = cleaned.indexOf("{");
+    const jsonEnd = cleaned.lastIndexOf("}");
+    const jsonStr = jsonStart >= 0 && jsonEnd > jsonStart
+      ? cleaned.slice(jsonStart, jsonEnd + 1)
+      : cleaned;
+    result = JSON.parse(jsonStr);
+  } catch (e) {
+    console.error(`  ⚠ AI 返回非 JSON (${e instanceof Error ? e.message : String(e)})，尝试直接保存为纯文本`);
     const outputDir = join(Deno.cwd(), outputRoot);
     await Deno.mkdir(outputDir, { recursive: true });
     const ts = new Date().toISOString().replaceAll(":", "-").replace(/\..+/, "");
@@ -224,15 +232,15 @@ ${profile.titleGuidance}
 
   const articleTitle = result.title ?? "跨境电商资讯简报";
 
-  // 组装渲染数据
-  const articleContents: Array<{ title: string; content: string; category: string }> = [];
+  // 组装渲染数据，直接保留 sourceIndex 避免后续标题反查
+  const articleContents: Array<{ title: string; content: string; category: string; sourceIndex?: number }> = [];
   for (const cat of result.categories ?? []) {
     for (const item of cat.items) {
-      const source = typeof item.sourceIndex === "number" ? candidates[item.sourceIndex - 1] : undefined;
       articleContents.push({
         title: item.title,
         content: `【${cat.name}】${item.summary}`,
         category: cat.name,
+        sourceIndex: typeof item.sourceIndex === "number" ? item.sourceIndex : undefined,
       });
     }
   }
@@ -241,19 +249,15 @@ ${profile.titleGuidance}
 
   // ── 4. 渲染 ──
   console.log("[4/4] 渲染模板...");
-  const renderer = new WeixinArticleTemplateRenderer(undefined, false, undefined, undefined, "minimal");
+  const renderer = new WeixinArticleTemplateRenderer(undefined, false, undefined, undefined, config.features.article.renderer.template);
   const templateData = articleContents.map((item, i) => {
     let sourceUrl = "";
     let sourceMedia: any[] = [];
-    for (const cat of result.categories ?? []) {
-      for (const it of cat.items) {
-        if (it.title === item.title && typeof it.sourceIndex === "number") {
-          const src = candidates[it.sourceIndex - 1];
-          if (src) {
-            sourceUrl = src.url ?? "";
-            sourceMedia = src.media ?? [];
-          }
-        }
+    if (item.sourceIndex) {
+      const src = candidates[item.sourceIndex - 1];
+      if (src) {
+        sourceUrl = src.url ?? "";
+        sourceMedia = src.media ?? [];
       }
     }
     return {
@@ -268,7 +272,7 @@ ${profile.titleGuidance}
     };
   });
 
-  const html = await renderer.render(templateData, "minimal");
+  const html = await renderer.render(templateData, config.features.article.renderer.template);
   const fullHtml = `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -293,6 +297,49 @@ ${html}
   console.log(`输出: ${outputPath}`);
   if (options.dryRun) {
     console.log(`状态: Dry-Run (如需正式发布请加 --no-dry-run)`);
+  } else {
+    // ── 5. 发布到微信公众号草稿箱 ──
+    console.log("[5/4] 发布到微信公众号草稿箱...");
+    try {
+      const publisher = new WeixinPublisher(config.providers.publish.weixin);
+      await publisher.refresh();
+
+      // 检查 IP 白名单
+      const ipCheck = await publisher.validateIpWhitelist();
+      if (typeof ipCheck === "string") {
+        console.log(`  ⚠ IP 白名单检查失败，请将 ${ipCheck} 添加到公众号 IP 白名单`);
+        Deno.exit(1);
+      }
+
+      // 摘要：取前 120 字
+      const digest = articleContents.map(c => c.title).join("，").slice(0, 120);
+
+      // 上传封面图
+      console.log("  上传封面图...");
+      let coverMediaId: string;
+      const firstImage = candidates.find(c => c.media?.length > 0)?.media?.[0]?.url;
+      if (firstImage) {
+        coverMediaId = await publisher.uploadImage(firstImage);
+      } else {
+        // 没有原文图片时，用 loremflickr 等公开图库
+        coverMediaId = await publisher.uploadImage("https://picsum.photos/400/200");
+      }
+
+      // 创建草稿
+      console.log("  创建草稿...");
+      const result = await publisher.publishArticle({
+        content: fullHtml,
+        title: articleTitle,
+        digest,
+        coverMediaId,
+      });
+
+      console.log(`  → 草稿已创建! media_id: ${result.publishId}`);
+      console.log(`  → 可登录 mp.weixin.qq.com 在草稿箱查看和发布`);
+    } catch (err) {
+      console.error(`  ✗ 发布失败:`, err instanceof Error ? err.message : String(err));
+      Deno.exit(1);
+    }
   }
 } finally {
   await shutdownAppResources();

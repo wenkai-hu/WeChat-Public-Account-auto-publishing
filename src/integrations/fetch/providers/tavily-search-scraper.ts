@@ -11,14 +11,18 @@ import {
 } from "./search-result-utils.ts";
 
 const TavilySearchResponseSchema = z.object({
-  results: z.array(z.object({
-    title: z.string().optional(),
-    url: z.string().optional(),
-    content: z.string().optional(),
-    raw_content: z.string().nullable().optional(),
-    score: z.number().optional(),
-    published_date: z.string().optional(),
-  })).optional(),
+  results: z
+    .array(
+      z.object({
+        title: z.string().optional(),
+        url: z.string().optional(),
+        content: z.string().optional(),
+        raw_content: z.string().nullable().optional(),
+        score: z.number().optional(),
+        published_date: z.string().optional(),
+      }),
+    )
+    .optional(),
   answer: z.string().nullable().optional(),
 });
 
@@ -40,15 +44,15 @@ export class TavilySearchScraper implements ContentScraper {
       );
     }
 
-    const limit = normalizeLimit(options?.limit, 8, 20);
+    const limit = normalizeLimit(options?.limit, 4, 8);
     const response = await this.httpClient.request<unknown>(
       "https://api.tavily.com/search",
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
           query: normalizedQuery,
@@ -56,6 +60,7 @@ export class TavilySearchScraper implements ContentScraper {
           max_results: limit,
           include_answer: false,
           include_raw_content: false,
+          time_range: "week",
         }),
         retries: 2,
         timeout: 45000,
@@ -81,7 +86,7 @@ export class TavilySearchScraper implements ContentScraper {
           extraMetadata: {
             score: item.score,
           },
-        })
+        }),
       )
       .slice(0, limit);
   }
