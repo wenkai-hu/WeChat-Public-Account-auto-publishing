@@ -61,6 +61,7 @@ const templates: Record<string, string | null> = {
   product: "article.product.ejs",
   minimal: "article.minimal.ejs",
   darktech: "article.darktech.ejs",
+  shazhixing: "article.shazhixing.ejs",
   dynamic: null,
 };
 

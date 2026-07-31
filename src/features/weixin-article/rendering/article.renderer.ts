@@ -4,6 +4,7 @@ import {
   WeixinTemplate,
 } from "@src/features/weixin-article/domain/renderable-article.ts";
 import ejs from "npm:ejs@3.1.10";
+import { join } from "node:path";
 import { BaseTemplateRenderer } from "@src/features/weixin-article/rendering/base.renderer.ts";
 import { Logger } from "@zilla/logger";
 import type { ContentImageUploader } from "@src/core/ports/content-publisher.ts";
@@ -88,6 +89,21 @@ export class WeixinArticleTemplateRenderer
       ...WEIXIN_TEMPLATE_REGISTRY,
       dynamic: DYNAMIC_TEMPLATE,
     };
+    // shazhixing 以可读 .ejs 文件为准，便于直接手改模板
+    try {
+      const shazhixingPath = join(
+        Deno.cwd(),
+        "src/features/weixin-article/rendering/templates",
+        "article.shazhixing.ejs",
+      );
+      this.templates.shazhixing = await Deno.readTextFile(shazhixingPath);
+    } catch (error) {
+      logger.warn(
+        `article.shazhixing.ejs 读取失败，回退 registry: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   /**

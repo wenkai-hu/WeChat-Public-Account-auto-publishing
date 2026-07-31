@@ -1,0 +1,92 @@
+<%
+function renderContentBlock(html) {
+  return (html || "")
+    .replace(/<img\b([^>]*)\/?>/gi, function(_, attrs) {
+      attrs = attrs.replace(/\sstyle=(["']).*?\1/gi, "").replace(/\/\s*$/, "");
+      return '<img' + attrs + ' style="max-width:100%;display:block;margin:18px auto;border-radius:4px;" />';
+    })
+    .replace(/<strong>/gi, '<strong style="font-weight:bold;color:#ffffff;background-color:#FF7918;">')
+    .replace(/<em>/gi, '<em style="font-style:normal;color:#FFD9B3;">')
+    .replace(/<ul>/gi, '<section style="margin:14px 0;padding:0;">')
+    .replace(/<\/ul>/gi, '</section>')
+    .replace(/<ol>/gi, '<section style="margin:14px 0;padding:0;">')
+    .replace(/<\/ol>/gi, '</section>')
+    .replace(/<li>/gi, '<p style="margin:8px 0;color:#ffffff;font-size:14px;line-height:2;letter-spacing:0.5px;">▪&nbsp;')
+    .replace(/<\/li>/gi, '</p>');
+}
+%>
+<section style="font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background-color:#002E39;box-sizing:border-box;font-style:normal;font-weight:400;text-align:justify;color:#3E3E3E;margin:0;padding:0;">
+
+  <section style="background-color:#002E39;margin:0;padding:26px 14px 20px;">
+    <section style="text-align:center;margin:0 0 18px;">
+      <p style="margin:0 0 12px;color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:2px;line-height:1.4;opacity:0.92;">MT GLOBAL WEEKLY NEWS</p>
+      <section style="margin:0 auto;width:100%;background-color:rgba(255,255,255,0.33);">
+        <section style="width:100%;transform:translate3d(-15px,0,0);">
+          <p style="margin:0;padding:8px 0;color:#ffffff;font-size:38px;font-weight:bold;letter-spacing:5px;text-align:center;line-height:1.3;">迈途国际资讯汇总</p>
+        </section>
+      </section>
+    </section>
+
+    <section style="margin:22px 0 6px auto;width:90%;padding:6px 14px;text-align:right;border-left:1px dashed #ffffff;border-right:1px solid #ffffff;letter-spacing:2px;line-height:2;">
+      <p style="margin:0;color:#ffffff;font-weight:bold;font-size:16px;letter-spacing:0.5px;"><%= new Date().toISOString().replace(/T.*/, "") %></p>
+      <p style="margin:0;color:#ffffff;font-weight:bold;font-size:15px;letter-spacing:0.5px;">跨境电商 · 卖家资讯汇编</p>
+    </section>
+    <p style="margin:0;color:#ffffff;font-size:15px;letter-spacing:0.5px;text-align:right;line-height:1.2;"><b style="font-weight:bold;letter-spacing:0.5px;">-----------------------------------------</b></p>
+  </section>
+
+  <section style="background-color:#002E39;margin:0;padding:0 14px 14px;">
+    <section style="padding:18px 16px;border:2px solid #ffffff;background-color:#002E39;">
+      <p style="margin:0 0 2px;color:#FF7918;font-size:14px;font-weight:bold;letter-spacing:3px;line-height:1.4;">本期资讯目录</p>
+      <p style="margin:0 0 14px;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:2px;line-height:1.4;">CONTENTS</p>
+      <% for(var t=0; t<articles.length; t++) { %>
+        <p style="margin:0 0 10px;color:#ffffff;font-size:15px;letter-spacing:0.5px;line-height:1.7;"><span style="color:#FF7918;font-weight:bold;"><%= (t + 1).toString().padStart(2, '0') %></span>&nbsp;&nbsp;<%= articles[t].title %></p>
+      <% } %>
+    </section>
+  </section>
+
+  <% for(var j=0; j<articles.length; j++) { var article=articles[j]; %>
+    <section style="background-color:#002E39;margin:0;padding:0 0 10px;">
+      <section style="display:flex;flex-flow:row;background-color:#FF7918;transform:translate3d(38px,0,0);">
+        <section style="width:22%;text-align:center;align-self:center;box-sizing:border-box;">
+          <p style="margin:0;padding:0;color:#ffffff;font-size:40px;font-weight:bold;line-height:1.2;"><%= (j + 1).toString().padStart(2, '0') %></p>
+        </section>
+        <section style="width:56%;text-align:center;align-self:center;box-sizing:border-box;">
+          <p style="margin:0;padding:0 20px;color:#ffffff;font-size:17px;font-weight:bold;letter-spacing:3px;line-height:1.5;">ARTICLE <%= (j + 1).toString().padStart(2, '0') %></p>
+        </section>
+        <section style="width:22%;text-align:center;align-self:center;box-sizing:border-box;">
+          <p style="margin:0;padding:0;color:#ffffff;font-size:22px;font-weight:bold;line-height:1.2;">✦</p>
+        </section>
+      </section>
+      <section style="margin:0;padding:20px 14px 24px;border:2px solid #ffffff;background-color:#002E39;">
+        <p style="margin:0 0 6px;color:#ffffff;font-size:19px;font-weight:bold;letter-spacing:1px;line-height:1.5;"><%= article.title %></p>
+        <p style="margin:0 0 18px;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:1px;"><%= article.publishDate %></p>
+        <% var content=article.content || ""; var paragraphs=content.split("<next_paragraph />");
+        for(var i=0; i<paragraphs.length; i++) { var para=paragraphs[i].trim(); if(para.length>0) { %>
+          <section style="margin:0 0 16px;color:#ffffff;font-size:14px;letter-spacing:0.5px;line-height:2;text-align:justify;">
+            <%- renderContentBlock(para) %>
+          </section>
+        <% }} %>
+        <% if (article.media && article.media.length > 0) { %>
+          <section style="margin:18px 0;text-align:center;">
+            <img src="<%= article.media[0].url %>" style="max-width:100%;width:100%;height:auto;display:block;margin:0 auto;border-radius:4px;" />
+          </section>
+        <% } %>
+        <% if (article.url) { %>
+          <section style="margin:18px 0 0;padding:10px 12px;border:1px solid rgba(255,255,255,0.5);font-size:13px;color:rgba(255,255,255,0.9);word-break:break-all;line-height:1.8;">
+            原文链接：<a href="<%= article.url %>" style="color:#FFB366;text-decoration:none;"><%= article.url %></a>
+          </section>
+        <% } %>
+      </section>
+    </section>
+    <% if (j < articles.length - 1) { %>
+      <p style="background-color:#002E39;margin:0;padding:24px 14px;color:rgba(255,255,255,0.6);font-size:15px;letter-spacing:0.5px;text-align:center;line-height:1.2;"><b style="font-weight:bold;letter-spacing:0.5px;">-----------------------------------------</b></p>
+    <% } %>
+  <% } %>
+
+  <p style="background-color:#002E39;margin:0;padding:26px 14px 16px;color:rgba(255,255,255,0.6);font-size:15px;letter-spacing:0.5px;text-align:right;line-height:1.2;"><b style="font-weight:bold;letter-spacing:0.5px;">-----------------------------------------</b></p>
+  <section style="background-color:#002E39;margin:0;padding:0 14px 24px;">
+    <section style="padding:18px 14px;border:2px solid #ffffff;text-align:center;">
+      <p style="margin:0;color:#ffffff;font-size:14px;letter-spacing:1px;line-height:2;">如果你觉得内容不错，欢迎分享转发<br/><span style="color:rgba(255,255,255,0.8);font-size:12px;letter-spacing:0.5px;">本内容仅供参考，不构成业务建议</span></p>
+    </section>
+  </section>
+</section>
