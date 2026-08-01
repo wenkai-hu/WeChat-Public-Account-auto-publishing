@@ -28,6 +28,8 @@ interface CliOptions {
   maxArticles?: number;
   sourceType?: ArticleSourceFilter;
   dryRunOutputDir?: string;
+  coverTitle?: string;
+  coverDate?: string;
 }
 
 function parseArgs(args: string[]): CliOptions {
@@ -49,6 +51,12 @@ function parseArgs(args: string[]): CliOptions {
       case "--dry-run-output":
         options.dryRunOutputDir = args[++i];
         break;
+      case "--cover-title":
+        options.coverTitle = args[++i];
+        break;
+      case "--cover-date":
+        options.coverDate = args[++i];
+        break;
       case "--help":
         console.log(`用法:
   deno run -A scripts/run-lite.ts [options]
@@ -59,6 +67,8 @@ function parseArgs(args: string[]): CliOptions {
   --max-articles <n>      最多保留文章数 (默认 15)
   --source <type>         限制抓取 provider
   --dry-run-output <dir>  HTML 输出目录
+  --cover-title <text>    封面标题 (默认用文章标题)
+  --cover-date <text>     封面日期，如 2026.8.3-8.8 (默认自动算)
   --help                  显示帮助
 `);
         Deno.exit(0);
@@ -317,15 +327,32 @@ ${html}
       // 摘要：取前 120 字
       const digest = articleContents.map(c => c.title).join("，").slice(0, 120);
 
-      // 上传封面图
-      console.log("  上传封面图...");
+      // 上传封面图：优先用本地面板生成的品牌封面，失败则退回原文首图
+      console.log("  生成并上传封面图...");
       let coverMediaId: string;
-      const firstImage = candidates.find(c => c.media?.length > 0)?.media?.[0]?.url;
-      if (firstImage) {
-        coverMediaId = await publisher.uploadImage(firstImage);
-      } else {
-        // 没有原文图片时，用 loremflickr 等公开图库
-        coverMediaId = await publisher.uploadImage("https://picsum.photos/400/200");
+      try {
+        const today = new Date();
+        const maxAgeDays = config.features.article.sourceLimits?.maxAgeDays ?? 5;
+        const start = new Date(today.getTime() - maxAgeDays * 86400000);
+        const dateRange = options.coverDate ??
+          `${start.getFullYear()}.${start.getMonth() + 1}.${start.getDate()}-${today.getMonth() + 1}.${today.getDate()}`;
+        const { generateCoverPng } = await import("./generate-cover.ts");
+        const { pngPath } = await generateCoverPng({
+          size: "big",
+          title: options.coverTitle ?? articleTitle,
+          dateRange,
+        });
+        const pngBytes = await Deno.readFile(pngPath);
+        coverMediaId = await publisher.uploadImageBuffer(pngBytes, "image/png");
+      } catch (coverError) {
+        console.log(`  ⚠ 品牌封面生成失败 (${coverError instanceof Error ? coverError.message : String(coverError)})，退回原文首图`);
+        const firstImage = candidates.find(c => c.media?.length > 0)?.media?.[0]?.url;
+        if (firstImage) {
+          coverMediaId = await publisher.uploadImage(firstImage);
+        } else {
+          // 没有原文图片时，用 loremflickr 等公开图库
+          coverMediaId = await publisher.uploadImage("https://picsum.photos/400/200");
+        }
       }
 
       // 创建草稿

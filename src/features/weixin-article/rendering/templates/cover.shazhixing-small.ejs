@@ -1,0 +1,53 @@
+<% // 封面小图 300x400 (3:4)，与文章模板同品牌风格
+var cover = cover || {};
+var brandEn = cover.brandEn || "MT GLOBAL";
+var title = cover.title || "跨境电商资讯";
+var dateRange = cover.dateRange || "";
+%>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 300px; height: 400px; }
+  body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #002E39; overflow: hidden; }
+  .cover { position: relative; width: 300px; height: 400px; background: #002E39; color: #fff; }
+
+  /* 顶部橙色条 */
+  .top-bar { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: #FF7918; }
+
+  /* 背景装饰 */
+  .deco-1 { position: absolute; right: -50px; top: -50px; width: 160px; height: 160px; border-radius: 50%; border: 20px solid rgba(255,121,24,0.10); }
+
+  /* 品牌 */
+  .brand { position: absolute; top: 26px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.8); font-weight: 600; }
+
+  /* 中央标题 */
+  .hero { position: absolute; top: 50%; left: 16px; right: 16px; transform: translateY(-52%); text-align: center; }
+  .hero .title { font-size: 30px; font-weight: 800; letter-spacing: 2px; line-height: 1.45; }
+  .hero .accent-line { width: 36px; height: 3px; background: #FF7918; margin: 16px auto; }
+  .hero .date { font-size: 13px; letter-spacing: 1px; color: #FF7918; font-weight: 600; }
+
+  /* 底部 */
+  .footer { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="top-bar"></div>
+    <div class="deco-1"></div>
+    <div class="brand"><%= brandEn %></div>
+
+    <div class="hero">
+      <div class="title"><%- title %></div>
+      <div class="accent-line"></div>
+      <% if (dateRange) { %>
+        <div class="date"><%= dateRange %></div>
+      <% } %>
+    </div>
+
+    <div class="footer">迈途国际</div>
+  </div>
+</body>
+</html>

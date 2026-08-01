@@ -159,7 +159,20 @@ export class WeixinPublisher implements ContentPublisher, ContentImageUploader {
       return "SwCSRjrdGJNaWioRQUHzgF68BHFkSlb_f5xlTquvsOSA6Yy0ZRjFo0aW9eS3JJu_";
     }
     const image = await this.imageDownloader.download(imageUrl);
-    if (image.bytes.byteLength > WeixinPublisher.COVER_IMAGE_MAX_BYTES) {
+    return this.uploadImageBuffer(image.bytes, image.contentType);
+  }
+
+  /**
+   * 上传本地图片字节到微信素材库
+   * @param bytes 图片数据
+   * @param contentType 图片 MIME 类型，如 image/png
+   * @returns media_id
+   */
+  async uploadImageBuffer(
+    bytes: ArrayBuffer | Uint8Array,
+    contentType = "image/png",
+  ): Promise<string> {
+    if (bytes.byteLength > WeixinPublisher.COVER_IMAGE_MAX_BYTES) {
       throw new ProviderError({
         provider: "weixin",
         kind: "validation",
@@ -174,8 +187,8 @@ export class WeixinPublisher implements ContentPublisher, ContentImageUploader {
       const formData = new FormData();
       formData.append(
         "media",
-        new Blob([toArrayBuffer(image.bytes)], { type: image.contentType }),
-        createImageFilename(image.contentType),
+        new Blob([toArrayBuffer(bytes)], { type: contentType }),
+        createImageFilename(contentType),
       );
 
       const response = await this.apiClient.postForm<

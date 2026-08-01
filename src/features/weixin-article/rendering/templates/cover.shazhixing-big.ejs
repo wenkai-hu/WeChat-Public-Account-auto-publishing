@@ -1,0 +1,68 @@
+<% // 封面大图 900x383 (2.35:1)，与文章模板同品牌风格
+var cover = cover || {};
+var brandEn = cover.brandEn || "MT GLOBAL WEEKLY NEWS";
+var brandCn = cover.brandCn || "迈途国际";
+var title = cover.title || "跨境电商资讯汇总";
+var dateRange = cover.dateRange || "";
+var subtitle = cover.subtitle || "跨境卖家 · 一周资讯汇编";
+%>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 900px; height: 383px; }
+  body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #002E39; overflow: hidden; }
+  .cover { position: relative; width: 900px; height: 383px; background: #002E39; color: #fff; }
+
+  /* 顶部橙色条 */
+  .top-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: #FF7918; }
+
+  /* 背景装饰：半透明橙色圆环 */
+  .deco-1 { position: absolute; right: -60px; top: -80px; width: 280px; height: 280px; border-radius: 50%; border: 30px solid rgba(255,121,24,0.10); }
+  .deco-2 { position: absolute; left: -40px; bottom: -70px; width: 200px; height: 200px; border-radius: 50%; border: 24px solid rgba(255,121,24,0.08); }
+
+  /* 左上品牌 */
+  .brand { position: absolute; top: 28px; left: 34px; }
+  .brand .en { font-size: 14px; letter-spacing: 3px; color: rgba(255,255,255,0.85); font-weight: 600; }
+  .brand .cn { font-size: 11px; letter-spacing: 2px; color: #FF7918; margin-top: 6px; }
+
+  /* 右上日期 */
+  .date { position: absolute; top: 30px; right: 34px; font-size: 15px; letter-spacing: 1px; color: rgba(255,255,255,0.9); font-weight: 600; padding: 6px 14px; border: 1px solid #FF7918; border-radius: 999px; }
+
+  /* 中央标题 */
+  .hero { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-46%); text-align: center; padding: 0 60px; }
+  .hero .label { font-size: 15px; letter-spacing: 6px; color: #FF7918; font-weight: 700; margin-bottom: 18px; }
+  .hero .title { font-size: 52px; font-weight: 800; letter-spacing: 3px; line-height: 1.35; text-shadow: 0 2px 12px rgba(0,0,0,0.35); }
+  .hero .title .accent { color: #FF7918; }
+
+  /* 底部副标题 */
+  .footer { position: absolute; bottom: 26px; left: 0; right: 0; text-align: center; font-size: 14px; letter-spacing: 4px; color: rgba(255,255,255,0.75); }
+  .footer .line { display: inline-block; width: 34px; height: 1px; background: #FF7918; vertical-align: middle; margin: 0 12px; }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="top-bar"></div>
+    <div class="deco-1"></div>
+    <div class="deco-2"></div>
+
+    <div class="brand">
+      <div class="en"><%= brandEn %></div>
+      <div class="cn"><%= brandCn %></div>
+    </div>
+
+    <% if (dateRange) { %>
+      <div class="date"><%= dateRange %></div>
+    <% } %>
+
+    <div class="hero">
+      <div class="label">WEEKLY DIGEST</div>
+      <div class="title"><%- title %></div>
+    </div>
+
+    <div class="footer"><span class="line"></span><%= subtitle %><span class="line"></span></div>
+  </div>
+</body>
+</html>
