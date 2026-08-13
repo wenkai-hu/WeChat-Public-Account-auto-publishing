@@ -8,11 +8,15 @@ cloudflare-token.local
 .devcontainer.json
 dist
 
+reference/
+
 output
 temp
 .cursor
 *.bak
 *.exe
+
+.claude
 
 # Build output
 dist/
@@ -61,3 +65,14 @@ tmp/
 *.sqlite
 *.sqlite3
 *.db
+
+# 密钥与证书（防御性兜底）
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+.npmrc
